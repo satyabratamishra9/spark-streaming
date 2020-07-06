@@ -21,11 +21,13 @@ import reactivemongo.api.MongoConnection.ParsedURI
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api._
 import reactivemongo.bson.{BSONDocument, BSONDocumentReader}
+import reactivemongo.core.nodeset.Authenticate
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import org.mongodb.scala._
+
 
 
 object ExactlyOnce {
@@ -62,10 +64,18 @@ object ExactlyOnce {
     ssc.awaitTermination()
   }
   def getMongoCollection(dataBase : String, collection : String) : BSONCollection = {
+    def servers: List[String] = List("server1:27017", "server2:27017", "server3:27017")
     // setting up mongo connection, database and collection
     val driver: MongoDriver = new MongoDriver()
-    val connection: MongoConnection = driver.connection(ParsedURI(hosts =
-      List(("172.31.1.49", 27017)),
+    
+    //val servers = List("server1:27017", "server2:27017", "server3:27017")
+    val connection: MongoConnection = driver.connection(servers)
+    val dbName = "spark-test"
+    val userName = "username"
+    val password = "password"
+    val credentials = List(Authenticate(dbName, userName, password))
+
+    val connection: MongoConnection = driver.connection(servers, authentication = credentials),
       options = MongoConnectionOptions(nbChannelsPerNode = 200, connectTimeoutMS = 5000),
       ignoredOptions = List.empty[String], db = None, authenticate = None))
     //Failover Strategy for Mongo Connections
@@ -80,3 +90,4 @@ object ExactlyOnce {
     bsonCollection
   }
 }
+
