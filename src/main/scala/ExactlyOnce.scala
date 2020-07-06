@@ -22,6 +22,8 @@ import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api._
 import reactivemongo.bson.{BSONDocument, BSONDocumentReader}
 import reactivemongo.core.nodeset.Authenticate
+import reactivemongo.api.MongoConnectionOptions
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -32,7 +34,7 @@ import org.mongodb.scala._
 
 object ExactlyOnce {
   def main(args: Array[String]): Unit = {
-    val brokers = "172.31.1.49:9092"
+    val brokers = "3.21.127.72:9092,18.217.220.79:9092,3.128.26.238:9092"
     //val brokers = "localhost:9092" 18.222.179.73
     val topic = "spark-topic"
 
@@ -64,18 +66,19 @@ object ExactlyOnce {
     ssc.awaitTermination()
   }
   def getMongoCollection(dataBase : String, collection : String) : BSONCollection = {
-    def servers: List[String] = List("server1:27017", "server2:27017", "server3:27017")
+//    def servers: List[String] = List("18.222.232.155:27017", "3.136.108.176:27017", "3.128.197.113:27017")
     // setting up mongo connection, database and collection
     val driver: MongoDriver = new MongoDriver()
     
     //val servers = List("server1:27017", "server2:27017", "server3:27017")
-    val connection: MongoConnection = driver.connection(servers)
+    //val connection: MongoConnection = driver.connection(servers)
+    val servers: List[String] = List("18.222.232.155:27017", "3.136.108.176:27017", "3.128.197.113:27017")
     val dbName = "spark-test"
-    val userName = "username"
-    val password = "password"
+    val userName = "siteRootAdmin"
+    val password = "passw0rd"
     val credentials = List(Authenticate(dbName, userName, password))
 
-    val connection: MongoConnection = driver.connection(servers, authentication = credentials),
+    val connection: MongoConnection = driver.connection(servers, authentications = credentials),
       options = MongoConnectionOptions(nbChannelsPerNode = 200, connectTimeoutMS = 5000),
       ignoredOptions = List.empty[String], db = None, authenticate = None))
     //Failover Strategy for Mongo Connections
