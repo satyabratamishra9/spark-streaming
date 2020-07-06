@@ -9,7 +9,7 @@ libraryDependencies ++= Seq(
   //"org.apache.spark" %% "spark-streaming-kafka-0-10" % "2.4.4",
   //"org.apache.spark" % "spark-streaming_2.12" % "2.4.4" % "provided",
   //"org.apache.spark" % "spark-streaming-kafka-0-10_2.12" % "2.4.4",
-  "org.mongodb.scala" %% "mongo-scala-driver" % "2.7.0"
+  //"org.mongodb.scala" %% "mongo-scala-driver" % "2.7.0"
   //"org.apache.spark" %%  "spark-streaming-kafka-0-8_2.11" % "2.1.1",
   //"org.scalikejdbc" %% "scalikejdbc" % "3.0.1",
   //"mysql" % "mysql-connector-java" % "5.1.43"
