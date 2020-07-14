@@ -16,7 +16,10 @@ libraryDependencies ++= Seq(
 )
 libraryDependencies += "org.apache.spark" %% "spark-streaming" % "2.3.1" % "provided"
 libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-10" % "2.3.1"
-libraryDependencies += "org.reactivemongo" %% "reactivemongo" % "0.18.0"
+//libraryDependencies += "org.reactivemongo" %% "reactivemongo" % "0.18.0"
+libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.13.3"
+libraryDependencies += "org.mongodb.scala" %% "mongo-scala-driver" % "2.7.0"
+
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
