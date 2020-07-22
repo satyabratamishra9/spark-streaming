@@ -1,0 +1,43 @@
+public static void main(String[] args) throws InterruptedException {
+SparkSession sparkSession = SparkSession.builder().
+        appName(test).
+        master(local[8]).
+        config(spark.mongodb.output.uri,mongodb://<user>:
+<password>@<url>/<data_base>.<collection>).getOrCreate();
+JavaSparkContext javaSparkContext = new JavaSparkContext(sparkSession.sparkContext());
+JavaStreamingContext javaStreamingContext = new JavaStreamingContext(javaSparkContext,new Duration(20000));
+Map<String, Object> kafkaParams = new HashMap<>();
+kafkaParams.put(bootstrap.servers, localhost:9092);
+kafkaParams.put(key.deserializer, StringDeserializer.class);
+kafkaParams.put(value.deserializer, StringDeserializer.class);
+kafkaParams.put(group.id, test-consumer-group);// stream-wise unique
+kafkaParams.put(enable.auto.commit, false);
+kafkaParams.put(auto.offset.reset, earliest);
+Collection<String> topics = Arrays.asList("test-topic");
+JavaInputDStream<ConsumerRecord<String, String>> javaInputDStream = KafkaUtils.createDirectStream(javaStreamingContext,LocationStrategies.PreferConsistent(), ConsumerStrategies.Subscribe(topics,kafkaParams));
+javaInputDStream.foreachRDD((JavaRDD<ConsumerRecord<String, String>> rdd) ->{
+    OffsetRange[] offsetRanges = ((HasOffsetRanges)rdd.rdd()).offsetRanges();
+    JavaRDD<JsonObject> jsonObjectJavaRDD = rdd.map(record -> {
+        JsonObject jsonObject = null;
+        try{
+            jsonObject = gson.fromJson(record.value(), JsonObject.class);
+        }catch (Exception e){
+            LOGGER.error("Failed to create JSON for the entry: {}", record.value());
+        }
+
+        return jsonObject;
+    });
+    jsonObjectJavaRDD = jsonObjectJavaRDD.filter(Objects::nonNull);// remove empty records
+JavaRDD<Document> dbEntry = jsonObjectJavaRDD.map(record -> {
+    Document document = new Document();
+    document.put("key",(record.get("value_1")).getAsInt());// this will change according to your json format
+
+    return document;
+});
+    try{
+        MongoSpark.save(dbEntry);
+    }catch (Exception e){
+        LOGGER.error("Failed to write into database: {}" , e.getMessage());
+    }
+    ((CanCommitOffsets)javaInputDStream.inputDStream()).commitAsync(offsetRanges);});
+}
