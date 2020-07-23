@@ -1,22 +1,27 @@
 package com.spark.streaming.twitter.dao.mongo
 
 
+import com.spark.streaming.twitter.schemas.Schemas.TweetConsumerMessage
 import com.spark.streaming.twitter.utils.AppConfig._
 import org.mongodb.scala.bson.collection.immutable.Document
-import org.json4s.DefaultFormats
-import org.mongodb.scala.{Completed, MongoClient, Observer, SingleObservable}
+import org.mongodb.scala.{Completed, MongoClient, MongoCollection, Observer, SingleObservable}
 import org.apache.log4j.Logger
+import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
+import org.bson.codecs.configuration.{CodecProvider, CodecRegistry}
+import org.mongodb.scala.bson.codecs.{DEFAULT_CODEC_REGISTRY, Macros}
 
 
-class TwitterDaoImpl(mongoConnection: MongoConnection) extends TwitterDao {
+object TwitterDaoImpl extends TwitterDao {
 
-  implicit val jsonDefaultFormats = DefaultFormats
   val logger: Logger = Logger.getLogger(this.getClass)
-  val mongoClient: MongoClient = mongoConnection.mongoClient.get
+  val tweetConsumerMessageCodec: CodecProvider = Macros.createCodecProviderIgnoreNone(classOf[TweetConsumerMessage])
+  implicit val codecRegistry: CodecRegistry = fromRegistries(fromProviders(tweetConsumerMessageCodec), DEFAULT_CODEC_REGISTRY)
+  lazy val mongoConnection: MongoConnection = new MongoConnectionImpl
+  lazy val mongoClient: MongoClient = mongoConnection.mongoClient.get
 
-  override def insertIntoMongo(record: Document): Unit = {
-    val mongodb = mongoClient.getDatabase(database)
-    val tweet = mongodb.getCollection(tweetCollection)
+  override def insertIntoMongo(record: TweetConsumerMessage): Unit = {
+    val mongodb = mongoClient.getDatabase(database).withCodecRegistry(codecRegistry)
+    val tweet: MongoCollection[TweetConsumerMessage] = mongodb.getCollection(tweetCollection)
     val insertObservable: SingleObservable[Completed] = tweet.insertOne(record)
     insertObservable.subscribe(new Observer[Completed] {
       override def onNext(result: Completed): Unit = logger.debug(s"onNext: $result")

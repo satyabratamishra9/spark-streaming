@@ -1,9 +1,9 @@
 package com.spark.streaming.twitter.dao.mongo
 
 
-import org.mongodb.scala.bson.collection.immutable.Document
+import com.spark.streaming.twitter.schemas.Schemas.TweetConsumerMessage
 
 
 trait TwitterDao {
-  def insertIntoMongo(record: Document): Unit
+  def insertIntoMongo(record: TweetConsumerMessage): Unit
 }
